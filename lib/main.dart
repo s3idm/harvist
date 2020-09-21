@@ -1,14 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:fix_it/screens/home.dart';
-import 'package:fix_it/screens/landing.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
-
-import 'applocale.dart';
-import 'database.dart';
+import 'util/applocale.dart';
+import 'util/database.dart';
+import 'screens/home.dart';
+import 'screens/landing.dart';
 
 
 
@@ -47,21 +45,21 @@ class MyApp extends StatelessWidget {
           }
           else return  supportedLocales.first;
         },
-        home: Wrapper(),
+        home: AppWrapper(),
       ),
     );
   }
 }
 
 
-class Wrapper extends StatelessWidget {
+class AppWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
     final userState =  Provider.of<User>(context) ;
 
     if(userState == null ) return Landing();
-    if(userState != null ) return Home() ;
+    if(userState != null ) return HomeWrapper() ;
     return Container();
   }
 }

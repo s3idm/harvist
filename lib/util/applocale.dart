@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -7,6 +6,10 @@ import 'package:flutter/services.dart';
 
 String lang  ( BuildContext context , String key  ) {
   return AppLocale.of(context).getTranslation(key);
+}
+
+String langCode(BuildContext context ){
+  return AppLocale.of(context).locale.languageCode ;
 }
 
 class AppLocale{

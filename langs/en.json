@@ -9,16 +9,40 @@
   "client": "Client",
   "login": "Log In",
   "signup": "Sign Up",
-
-
   "phoneNotCorrect": "Invalid Phone Number",
-  "validation" : "Wait for validation",
   "validationKey": "Validation Key",
+  "validation" : "Wait for validation",
   "ensureKey": "Invalid Key",
   "cancel": "Cancel",
   "checkKey" : "Check",
-  "notRegistered": "Phone Not Registered",
   "checkConnection": "Check Your Connection",
+  "formErrors" : "Check all Fields",
+  "seafood": "Fish & seafood",
+  "meats" : "Meat & Poultry",
+  "meat" : "Meat & Milk",
+  "milk": "Milk",
+  "fruits": "Fruits",
+  "vegetables":"Vegetables",
+  "myOrders": "Cart",
+  "orders": "Orders",
+  "store": "Store",
+  "myPosts": "Posts",
+  "productType": "Product Type",
+  "price": "Price",
+  "currency": "Currency",
+  "dollar": "$",
+  "SR": "SR",
+  "AED": "AED",
+  "EGP": "EG",
+  "noPosts": "No Posts Yet",
+
+
+
+
+
+
+
+  "notRegistered": "Phone Not Registered",
   "isRegistered": "Already Registered",
   "selectJop": "Select Your Jop",
   "selectShop": "Select Your Shop",

@@ -1,8 +1,8 @@
-import 'dart:ui';
-import 'package:fix_it/screens/login.dart';
-import 'package:fix_it/screens/signup.dart';
-import 'animation.dart';
 import 'package:flutter/material.dart';
+import 'animation.dart';
+import 'dart:ui';
+import 'login.dart';
+import 'signup.dart';
 
 
 

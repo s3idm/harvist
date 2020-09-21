@@ -1,33 +1,152 @@
 import 'dart:ui';
-import 'package:country_code_picker/country_code_picker.dart';
-import 'package:fix_it/widgets/util.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:animations/animations.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../applocale.dart';
-import '../database.dart';
-import 'animation.dart';
+import 'package:harvest/util/util.dart';
+import 'package:harvest/util/applocale.dart';
+import 'package:harvest/util/database.dart';
+import 'package:harvest/screens/animation.dart';
 
 
 
-enum AccType {
-  client,
-  delivery,
-  farmer,
-}
 
 class SignUp extends StatefulWidget {
 
   final PageController  pageController ;
 
-  const SignUp({@required this.pageController});
+  SignUp({@required this.pageController});
 
   @override
   _SignUpState createState() => _SignUpState();
 }
 
 class _SignUpState extends State<SignUp> {
-  String _name , _phone ,_cCode , _accountTypeSelected ;
+  String _name , _phone ,_cCode , _accountTypeSelected , errorMSG ;
   AccType _accType ;
+
+
+  Future signUpWithPhone({String name ,phone,accType,cCode }) async {
+    loading = false ;
+    String _token ,errorMsg ;
+    FirebaseAuth auth = FirebaseAuth.instance ;
+    auth.verifyPhoneNumber(
+      phoneNumber: '$cCode$phone',
+      timeout: Duration(seconds: 120),
+      verificationCompleted: (AuthCredential credential) async {
+        var result = await auth.signInWithCredential(credential);
+        if (result.user != null){
+          DatabaseService().createNewClient(phone: phone,name: name,accType: accType,cCode: cCode,uid: result.user.uid);
+          Navigator.pop(context);
+        }
+      },
+      verificationFailed:(FirebaseAuthException authException){
+        print(authException.code);
+        setState(() {
+          if(authException.code == 'invalid-phone-number' )
+          errorMSG = lang(context, 'phoneNotCorrect');
+          else {
+            errorMSG = lang(context, 'checkConnection');
+          }
+        });
+      },
+      codeSent: (String verificationCode ,[int forceResendToken] ){
+        showModal(
+          context: context ,
+          builder: (context){
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              backgroundColor: Colors.green[100],
+              title: Center(child: Text(lang(context, 'validation'),style: TextStyle(color: Colors.green),)),
+              content: StatefulBuilder(
+                builder: (BuildContext context, StateSetter setState){
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      MyTextField(
+                        size: Size(300,40),
+                        onChanged: (val){_token = val ;},
+                        textInputType: TextInputType.number,
+                        label: lang(context, 'validationKey'),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.all(5.0),
+                        child: Text(errorMsg ?? '',style: TextStyle(color: Colors.red,fontSize: 14),),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Button(
+                            hasBorders: true,
+                            title: lang(context, 'cancel'),
+                            onPressed: (){
+                              Navigator.pop(context);
+                            },
+                          ),
+                          Button(
+                            hasBorders: true,
+                            title: lang(context, 'checkKey'),
+                            onPressed: () async {
+                              setState(()  {
+                                loading = true;
+                              });
+                              try{
+                                AuthCredential credential =  PhoneAuthProvider.credential(verificationId: verificationCode , smsCode: _token);
+                                var result = await auth.signInWithCredential(credential);
+                                if (result.user != null){
+                                  await DatabaseService().createNewClient(phone: phone,name: name,accType: accType,cCode: cCode,uid: result.user.uid);
+                                  DatabaseService().addPhone(phone: phone,cCode: cCode);
+                                  Navigator.pop(context);
+                                }
+                              }
+                              catch (ex){
+                                print(ex);
+                                setState((){
+                                  errorMsg = lang(context, 'ensureKey');
+                                  loading =false;
+                                });
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                      loading == true ?
+                      CircularProgressIndicator():
+                      SizedBox(),
+                    ],
+                  );
+                },
+              ),
+            );
+          },
+        );
+      } ,
+      codeAutoRetrievalTimeout: (codeRetrieval){
+        print(codeRetrieval);
+      },
+    );
+  }
+
+  void formValidation () async {
+    final alreadyRegistered = await  DatabaseService().alreadyRegistered(phone:_phone);
+
+    if(_name == null || _phone == null || _accType == null ){
+      setState(() {
+        errorMSG = lang(context, 'formErrors') ;
+      });
+    }else if(alreadyRegistered == true ) {
+     setState(() {
+       errorMSG = lang(context, 'isRegistered');
+     });
+    }
+    else{
+      setState(() {
+        errorMSG = '';
+      });
+      signUpWithPhone(phone: _phone ,accType: _accType,cCode: _cCode,name: _name,) ;
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +161,11 @@ class _SignUpState extends State<SignUp> {
             delay: 0.0,
             reversed: true,
             child: BlurContainer(size: size),
+          ),
+        ),
+        Positioned(
+          top: size.height*.25,
+          child: Text(errorMSG ?? '',style: TextStyle(fontSize: 15,color: Colors.greenAccent),textAlign: TextAlign.center,
           ),
         ),
         Positioned(
@@ -65,26 +189,13 @@ class _SignUpState extends State<SignUp> {
           child: FadeX(
             delay: 0.5,
             reversed: true,
-            child: Container(
-              height: 45,
-              width: 50,
-              decoration: containerBorders(),
-              child: CountryCodePicker(
-                onChanged: (code){
-                  _cCode = code.dialCode ;
-                  print(_cCode);
-                },
-                showFlag: false,
-                hideSearch: true,
-                textStyle: TextStyle(color: Colors.green,fontSize: 12),
-                initialSelection: 'EG',
-                favorite: ['SA','EG','AE','SY','OM','MC','KW','JO','IR','IQ','PS','QA','BH','YE','TN','DZ','LB','LY'],
-                showFlagDialog: true,
-                comparator: (a, b) => b.name.compareTo(a.name),
-                onInit: (code) {
-                  _cCode = code.dialCode ;
-                },
-              ),
+            child: MyCountryCode(
+              onChanged: (code){
+                _cCode = code.dialCode ;
+              },
+              onInit: (code) {
+                _cCode = code.dialCode ;
+              },
             ),
           ),
         ),
@@ -157,7 +268,7 @@ class _SignUpState extends State<SignUp> {
               title: lang(context, 'signup'),
               hasBorders: true ,
               onPressed: (){
-                DatabaseService().signUpInWithPhone(context: context ,phone: _phone ,accType: _accType,cCode: _cCode,name: _name, signInOrUp: SignInUp.SignUp) ;
+                formValidation();
               },
             ),
           ),
