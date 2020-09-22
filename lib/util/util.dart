@@ -1,7 +1,7 @@
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:harvest/screens/users/commen/maps.dart';
 import 'dart:ui';
-
 import 'package:harvest/util/applocale.dart';
 
 
@@ -23,6 +23,7 @@ class Product{
   final String nameAR,nameEN , url;
   Product({this.nameAR, this.nameEN, this.url});
 }
+
 class Posts{
   final String nameAR,nameEN , url ,currency,price,type,vendorUID , postUID ;
   Posts({this.postUID, this.currency, this.price, this.type, this.vendorUID,this.nameAR, this.nameEN, this.url});
@@ -204,6 +205,71 @@ class ProductsList extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+
+class MyGridView extends StatelessWidget {
+  const MyGridView({@required this.products,}) ;
+
+  final List<Product> products;
+
+  @override
+  Widget build(BuildContext context) {
+    final Size size = MediaQuery.of(context).size ;
+    return GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2,childAspectRatio: 1.5),
+        itemCount: products.length,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: 4),
+            child: GestureDetector(
+              onTap: (){
+              Navigator.push(context, MaterialPageRoute(builder: (context)=> ResultsInMaps(product: products[index].nameEN )));
+              },
+              child: Stack(
+                alignment: Alignment.topCenter,
+                overflow: Overflow.visible,
+                children: [
+                  Container(
+                    height: size.height*.2,
+                    width: size.width*.45,
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    child: Container(
+                        height: size.height*.12,
+                        width: size.width*.45,
+                        decoration: containerRadius(color: Colors.greenAccent[100],radius: 10)
+                    ),
+                  ),
+                  Positioned(
+                    top: 0,
+                    child: Container(
+                      height: size.width*.22,
+                      width: size.width*.22,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: NetworkImage(products[index].url),
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 15,
+                    child: Text(
+                      langCode(context) == 'ar' ?
+                      products[index].nameAR : products[index].nameEN,
+                      style: TextStyle(fontSize:13,color: Colors.green[800],fontWeight: FontWeight.bold),textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
     );
   }
 }

@@ -5,7 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'util/applocale.dart';
 import 'util/database.dart';
-import 'screens/home.dart';
+import 'screens/homeWrapper.dart';
 import 'screens/landing.dart';
 
 

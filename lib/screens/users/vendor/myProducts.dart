@@ -1,14 +1,14 @@
-import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:harvest/screens/users/addProduct.dart';
 import 'package:harvest/util/applocale.dart';
 import 'package:harvest/util/database.dart';
 import 'package:harvest/util/util.dart';
 import 'package:provider/provider.dart';
+import 'dart:ui';
 
+import 'addProduct.dart';
 
 
 class MyProducts extends StatefulWidget {

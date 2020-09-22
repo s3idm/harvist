@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +5,7 @@ import 'package:harvest/util/applocale.dart';
 import 'package:harvest/util/database.dart';
 import 'package:harvest/util/util.dart';
 import 'package:provider/provider.dart';
-
+import 'dart:ui';
 
 class AddProduct extends StatefulWidget {
   @override

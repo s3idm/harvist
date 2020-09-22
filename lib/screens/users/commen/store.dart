@@ -1,6 +1,5 @@
-import 'package:harvest/screens/products/fruits.dart';
-import 'package:harvest/screens/products/meats.dart';
-import 'package:harvest/screens/products/vegetables.dart';
+import 'package:harvest/screens/products/productsTaps.dart';
+import 'package:harvest/screens/products/meatsAndMilkTap.dart';
 import 'package:flutter/material.dart';
 import 'package:harvest/util/applocale.dart';
 

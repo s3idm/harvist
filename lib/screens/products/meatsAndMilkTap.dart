@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:harvest/screens/products/meatAndChick.dart';
-import 'package:harvest/screens/products/milk.dart';
-import 'package:harvest/screens/products/seafood.dart';
 import 'package:harvest/util/applocale.dart';
+import 'productsTaps.dart';
 
 
 class Meats extends StatefulWidget {

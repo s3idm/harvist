@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:harvest/screens/users/clients.dart';
-import 'package:harvest/screens/users/delivery.dart';
-import 'package:harvest/screens/users/vendor.dart';
+import 'package:harvest/screens/users/clinet/clients.dart';
+import 'package:harvest/screens/users/delivery/delivery.dart';
+import 'package:harvest/screens/users/vendor/vendor.dart';
 import 'package:harvest/util/util.dart';
 import 'package:provider/provider.dart';
 import 'package:harvest/util/database.dart';

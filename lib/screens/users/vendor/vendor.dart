@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:harvest/screens/users/myProducts.dart';
+import 'package:harvest/screens/users/commen/store.dart';
 import 'package:harvest/util/applocale.dart';
-import 'package:harvest/screens/users/store.dart';
+
+import 'myProducts.dart';
 
 class Vendor extends StatefulWidget {
 
@@ -25,13 +26,11 @@ class _VendorState extends State<Vendor>with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Color(0xfff0f2f5),
       body: Column(
         children: [
-          Container(
-            height: size.height-104,
+          Expanded(
             child: TabBarView(
               controller: tabController,
               children: [
