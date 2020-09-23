@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:harvest/screens/users/commen/maps.dart';
 import 'dart:ui';
 import 'package:harvest/util/applocale.dart';
+import 'package:location/location.dart';
 
 
 
@@ -26,7 +28,8 @@ class Product{
 
 class Posts{
   final String nameAR,nameEN , url ,currency,price,type,vendorUID , postUID ;
-  Posts({this.postUID, this.currency, this.price, this.type, this.vendorUID,this.nameAR, this.nameEN, this.url});
+  final GeoPoint location ;
+  Posts({this.location, this.postUID, this.currency, this.price, this.type, this.vendorUID,this.nameAR, this.nameEN, this.url});
 }
 
 
@@ -273,3 +276,113 @@ class MyGridView extends StatelessWidget {
     );
   }
 }
+
+class PostsView extends StatelessWidget {
+  const PostsView({@required this.products, this.goTOLocation,}) ;
+
+  final List<Posts> products;
+  final Function goTOLocation ;
+
+  @override
+  Widget build(BuildContext context) {
+    final Size size = MediaQuery.of(context).size ;
+    return ListView.builder(
+        itemCount: products.length,
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4),
+            child: GestureDetector(
+              onTap: (){
+
+              },
+              child: Stack(
+                alignment: Alignment.topCenter,
+                overflow: Overflow.visible,
+                children: [
+                  Container(
+                    height: size.height*.25,
+                    width: size.width*.45,
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    child: Container(
+                      height: size.height*.25,
+                      width: size.width*.45,
+                      decoration: containerRadius(radius: 10),
+                    ),
+                  ),
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Container(
+                      height: size.width*.2,
+                      width: size.width*.45,
+                      decoration: BoxDecoration(
+                       // color: Colors.red,
+                        image: DecorationImage(
+                          image: NetworkImage(products[index].url),
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: size.width*.2+10,
+                    right: 10,
+                    child: Text(
+                      langCode(context) == 'ar' ?
+                      products[index].nameAR : products[index].nameEN,
+                      style: TextStyle(fontSize:13,color: Colors.green[800],fontWeight: FontWeight.bold),textAlign: TextAlign.right,
+                    ),
+                  ),
+                  Positioned(
+                    top: size.width*.2+10,
+                    left: 10,
+                    child: Text('${products[index].price}  ${products[index].currency}',
+                      style: TextStyle(fontSize:13,color: Colors.green[800]),textAlign: TextAlign.right,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: -6,
+                    left: 0,
+                    child: Container(
+                      width: 65,
+                      child: RawMaterialButton(
+                        shape: StadiumBorder(),
+                        onPressed: (){},
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.favorite_border,color: Colors.red,),
+                            SizedBox(width: 3,),
+                            Text('15',
+                              style: TextStyle(fontSize:13,color: Colors.green[800]),textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: -6,
+                    right: 0,
+                    child: Container(
+                      width: 65,
+                      child: RawMaterialButton(
+                        shape: StadiumBorder(),
+                        onPressed: goTOLocation,
+                        child: Icon(Icons.location_on,color: Colors.red,),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+    );
+  }
+}
+

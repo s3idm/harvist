@@ -23,7 +23,7 @@ class _ResultsInMapsState extends State<ResultsInMaps>  {
   GoogleMapController _mapController;
   List<Marker> allMarkers = [];
   BehaviorSubject<double> radius = BehaviorSubject.seeded(20);
-  StreamSubscription _subscription;
+  StreamSubscription _subscription ;
   MapType mapType = MapType.normal ;
   List<Posts> productsFromDB =[];
   LocationData _myLocation;
@@ -49,8 +49,9 @@ class _ResultsInMapsState extends State<ResultsInMaps>  {
   _myCurrentLocation() async {
     final myLocation = await Location().getLocation();
     setState(() {
-      _myLocation = myLocation;
+      _myLocation = myLocation ;
     });
+
   }
 
   animateToMyLocation() {
@@ -92,12 +93,12 @@ class _ResultsInMapsState extends State<ResultsInMaps>  {
       gPoint = map.values.first ;
 
       Marker marker = Marker(
-          position: LatLng(gPoint.latitude, gPoint.longitude),
-          markerId: MarkerId(doc.get('postUID')),
-          icon: BitmapDescriptor.defaultMarkerWithHue(20.0),
-          infoWindow: InfoWindow(title: '${doc.get('price')}  ${doc.get('currency')}' ),
-          onTap: () {}
-          );
+        position: LatLng(gPoint.latitude, gPoint.longitude),
+        markerId: MarkerId(doc.get('postUID')),
+        icon: BitmapDescriptor.defaultMarkerWithHue(20.0),
+        infoWindow: InfoWindow(title: '${doc.get('price')}  ${doc.get('currency')}' ),
+        onTap: () {},
+        );
       Posts post = Posts(
         nameAR: doc.get('nameAR'),
         nameEN: doc.get('nameEN'),
@@ -130,6 +131,7 @@ class _ResultsInMapsState extends State<ResultsInMaps>  {
 
   @override
   Widget build(BuildContext context) {
+    final Size size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Color(0xffE4E6EB),
       body: Stack(
@@ -171,7 +173,17 @@ class _ResultsInMapsState extends State<ResultsInMaps>  {
             ),
           ),
           Positioned(
-            bottom: 60,
+            bottom: 65,
+            left: 5,
+            height: size.height*.25,
+            width: size.width,
+            child: PostsView(
+              products: productsFromDB,
+              goTOLocation: (){}
+            ),
+          ),
+          Positioned(
+            bottom: 5,
             left: 5,
             child: Slider(
               activeColor: Colors.green[800],
@@ -179,14 +191,14 @@ class _ResultsInMapsState extends State<ResultsInMaps>  {
               max: 60,
               min: 20,
               divisions: 4,
-              label: "${radius.value}  KM.",
+              label: "${radius.value} km",
               value: radius.value,
               onChanged: _updateQuery,
             ),
           ),
           Positioned(
-            bottom: 90,
-            right: 5,
+            bottom: 5,
+            right: 65,
             width: 50,
             height: 50,
             child: RawMaterialButton(
@@ -204,7 +216,7 @@ class _ResultsInMapsState extends State<ResultsInMaps>  {
             ),
           ),
           Positioned(
-            bottom: 30,
+            bottom: 5,
             right: 5,
             width: 50,
             height: 50,
