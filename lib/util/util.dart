@@ -1,10 +1,13 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:country_code_picker/country_code_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:harvest/screens/users/commen/maps.dart';
 import 'dart:ui';
 import 'package:harvest/util/applocale.dart';
-import 'package:location/location.dart';
+import 'package:harvest/util/database.dart';
+import 'package:provider/provider.dart';
 
 
 
@@ -18,7 +21,12 @@ enum SignInUp{
 enum AccType {
   client,
   delivery,
-  farmer,
+  vendor,
+}
+enum OrderState {
+  received,
+  onTheWay,
+  delivered,
 }
 
 class Product{
@@ -27,11 +35,20 @@ class Product{
 }
 
 class Posts{
-  final String nameAR,nameEN , url ,currency,price,type,vendorUID , postUID ;
-  final GeoPoint location ;
-  Posts({this.location, this.postUID, this.currency, this.price, this.type, this.vendorUID,this.nameAR, this.nameEN, this.url});
-}
+  final String nameAR,nameEN , url ,currency,price,type,vendorUID , postUID  ;
+  final Map postLocation ;
+  final LatLng latLng;
+  final List likes ;
+  Posts({this.latLng, this.likes, this.postLocation, this.postUID, this.currency, this.price, this.type, this.vendorUID,this.nameAR, this.nameEN, this.url});
 
+}
+class Order{
+  final String nameAR,nameEN , url ,currency,price,type,vendorUID , postUID ,quantity ;
+  final Map clientLocation ;
+  final Map postLocation ;
+  Order({this.quantity, this.postLocation, this.clientLocation, this.postUID, this.currency, this.price, this.type, this.vendorUID,this.nameAR, this.nameEN, this.url,});
+
+}
 
 class Users {
   final String name ,uid , phone , cCode  ,accType ;
@@ -278,23 +295,28 @@ class MyGridView extends StatelessWidget {
 }
 
 class PostsView extends StatelessWidget {
-  const PostsView({@required this.products, this.goTOLocation,}) ;
+  const PostsView({@required this.products, this.mapController, this.controller,}) ;
 
   final List<Posts> products;
-  final Function goTOLocation ;
+  final GoogleMapController mapController ;
+  final ScrollController controller ;
+
+
 
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size ;
+    final User user = Provider.of<User>(context) ;
     return ListView.builder(
         itemCount: products.length,
         scrollDirection: Axis.horizontal,
+        controller: controller,
         itemBuilder: (context, index) {
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: 4),
             child: GestureDetector(
               onTap: (){
-
+                showBuySheet(context, products[index]);
               },
               child: Stack(
                 alignment: Alignment.topCenter,
@@ -307,9 +329,9 @@ class PostsView extends StatelessWidget {
                   Positioned(
                     bottom: 0,
                     child: Container(
-                      height: size.height*.25,
+                      height: size.height*.19,
                       width: size.width*.45,
-                      decoration: containerRadius(radius: 10),
+                      decoration: containerRadius(radius: 20),
                     ),
                   ),
                   Positioned(
@@ -319,7 +341,6 @@ class PostsView extends StatelessWidget {
                       height: size.width*.2,
                       width: size.width*.45,
                       decoration: BoxDecoration(
-                       // color: Colors.red,
                         image: DecorationImage(
                           image: NetworkImage(products[index].url),
                           fit: BoxFit.contain,
@@ -333,35 +354,54 @@ class PostsView extends StatelessWidget {
                     child: Text(
                       langCode(context) == 'ar' ?
                       products[index].nameAR : products[index].nameEN,
-                      style: TextStyle(fontSize:13,color: Colors.green[800],fontWeight: FontWeight.bold),textAlign: TextAlign.right,
+                      style: TextStyle(fontSize:14,color: Colors.green[800],fontWeight: FontWeight.bold),textAlign: TextAlign.right,
                     ),
                   ),
                   Positioned(
-                    top: size.width*.2+10,
-                    left: 10,
-                    child: Text('${products[index].price}  ${products[index].currency}',
+                    top: size.width*.2+35,
+                    right: 10,
+                    child: Text('${products[index].currency}    ${products[index].price}',
                       style: TextStyle(fontSize:13,color: Colors.green[800]),textAlign: TextAlign.right,
                     ),
                   ),
+                  // Positioned(
+                  //   bottom: size.height*.07,
+                  //   left: 0,
+                  //   child: Container(
+                  //     width: 50,
+                  //     child: RawMaterialButton(
+                  //       child: Icon(Icons.favorite_border,color: Colors.red,),
+                  //       shape: StadiumBorder(),
+                  //       onPressed: (){
+                  //         DatabaseService(uid: user.uid ).loveAProduct(products[index].postUID);
+                  //       },
+                  //     ),
+                  //   ),
+                  // ),
+                  // Positioned(
+                  //   bottom: size.height*.07,
+                  //   left: 35,
+                  //   child: Text(products[index].likes.length.toString()),
+                  // ),
                   Positioned(
                     bottom: -6,
                     left: 0,
                     child: Container(
-                      width: 65,
+                      width: 50,
                       child: RawMaterialButton(
+                        child: Icon(Icons.location_on,color: Colors.red,),
                         shape: StadiumBorder(),
-                        onPressed: (){},
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.favorite_border,color: Colors.red,),
-                            SizedBox(width: 3,),
-                            Text('15',
-                              style: TextStyle(fontSize:13,color: Colors.green[800]),textAlign: TextAlign.center,
+                        onPressed: () {
+                          mapController.animateCamera(
+                            CameraUpdate.newCameraPosition(
+                              CameraPosition(
+                                target: products[index].latLng,
+                                zoom: 15,
+                                tilt: 90,
+                              ),
                             ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -369,11 +409,13 @@ class PostsView extends StatelessWidget {
                     bottom: -6,
                     right: 0,
                     child: Container(
-                      width: 65,
+                      width: 50,
                       child: RawMaterialButton(
+                        child: Icon(Icons.add_shopping_cart,color: Colors.red,),
                         shape: StadiumBorder(),
-                        onPressed: goTOLocation,
-                        child: Icon(Icons.location_on,color: Colors.red,),
+                        onPressed: (){
+                          showBuySheet(context, products[index]);
+                        },
                       ),
                     ),
                   ),
@@ -386,3 +428,154 @@ class PostsView extends StatelessWidget {
   }
 }
 
+showBuySheet(BuildContext context , Posts post){
+  double quantity = 1.0 ;
+
+  return showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.white,
+
+    builder: (BuildContext context) {
+      final User user = Provider.of<User>(context);
+      return StatefulBuilder(
+        builder: (BuildContext context, void Function(void Function()) setState) {
+          return Stack(
+            overflow: Overflow.visible,
+            alignment: Alignment.center,
+            children: [
+              Container(
+                height: 220,
+                width: MediaQuery.of(context).size.width,
+              ),
+              Positioned(
+                top: -50,
+                right: 5,
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage(post.url),
+                    )
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 15,
+                right: 120,
+                child: Text(
+                  AppLocale.of(context).locale.languageCode == 'ar' ? post.nameAR : post.nameEN ,
+                  style: TextStyle(color: Colors.green[800],fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+              Positioned(
+                top: 40,
+                right: 120,
+                child: Text( post.price ,
+                  style: TextStyle(color: Colors.green[800],fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+              Positioned(
+                top: 40,
+                right: 150,
+                child: Text( lang(context, post.currency) ,
+                  style: TextStyle(color: Colors.green[800],fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+              Positioned(
+                top: 40,
+                right: 150,
+                child: Text( lang(context, post.currency) ,
+                  style: TextStyle(color: Colors.green[800],fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+              Positioned(
+                top: 60,
+                right: 15,
+                child: Column(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.add_circle_outline,color: Colors.green[900],),
+                      onPressed: (){
+                        setState.call((){
+                          quantity = quantity + .5 ;
+                        });
+                      },
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.remove_circle_outline,color: Colors.green[900],),
+                      onPressed: (){
+                       if(quantity > 0.5 ){
+                         setState.call((){
+                           quantity = quantity - .5 ;
+                         });
+                       }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 100,
+                right: 80,
+                child: Text( '$quantity  kgm'  ,
+                  style: TextStyle(color: Colors.green[800],fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+              Positioned(
+                top: 150,
+                child: Container(
+                  width: 200,
+                  height: 45,
+                  child: RaisedButton(
+                    color: Colors.green[700],
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text('Order',
+                          style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                        Text('  ${quantity * double.parse(post.price)} ${post.currency}',
+                          style: TextStyle(color: Colors.yellow),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                    shape: StadiumBorder(),
+                    onPressed: (){
+                      DatabaseService(uid: user.uid).placeAnOrder(
+                        nameEN: post.nameEN,
+                        nameAR: post.nameAR,
+                        url: post.url,
+                        price: post.price,
+                        vendorUID: post.vendorUID,
+                        currency: post.currency,
+                        postUID: post.postUID,
+                        type: post.type,
+                        quantity: quantity.toString(),
+                        postLocation: post.postLocation,
+                      );
+                      Navigator.pop(context);
+                      Fluttertoast.showToast(
+                        msg: "${lang(context, 'orderPlaced').toString()}",
+                        gravity: ToastGravity.BOTTOM,
+                        timeInSecForIosWeb: 1,
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}

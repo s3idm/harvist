@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 
@@ -55,5 +56,27 @@ class _AppLocaleDelegate extends LocalizationsDelegate<AppLocale> {
 
   @override
   bool shouldReload(LocalizationsDelegate old) => false ;
+
+}
+
+class GetSharedLang extends ChangeNotifier {
+
+  String langCodeFromShared = 'ar' ;
+
+  Future<String> loadLang() async {
+    SharedPreferences getLangCode = await SharedPreferences.getInstance() ;
+    langCodeFromShared = getLangCode.getString('lCode') ;
+    notifyListeners() ;
+    print('* $langCodeFromShared *');
+    return getLangCode.getString('lCode') ;
+  }
+
+  Future<bool> saveLang(String code) async {
+    SharedPreferences saveLangCode = await SharedPreferences.getInstance() ;
+    langCodeFromShared = code ;
+    print(langCodeFromShared);
+    notifyListeners() ;
+    return await saveLangCode.setString('lCode', code);
+  }
 
 }

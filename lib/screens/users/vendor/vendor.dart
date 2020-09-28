@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:harvest/screens/users/commen/store.dart';
+import 'package:harvest/screens/users/vendor/recievedOrders.dart';
 import 'package:harvest/util/applocale.dart';
 
 import 'myProducts.dart';
@@ -36,7 +37,7 @@ class _VendorState extends State<Vendor>with SingleTickerProviderStateMixin {
               children: [
                 StorePage(),
                 MyProducts(),
-                Container(),
+                ReceivedOrders(),
               ],
             ),
           ),

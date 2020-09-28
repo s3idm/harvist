@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
+import 'package:harvest/util/applocale.dart';
 import 'package:harvest/util/util.dart';
 import 'package:location/location.dart';
 
@@ -22,16 +25,19 @@ class DatabaseService {
   final CollectionReference meatAndChicken = FirebaseFirestore.instance.collection('Meat and chicken');
   final CollectionReference milk           = FirebaseFirestore.instance.collection('Milk');
   final CollectionReference productPosts   = FirebaseFirestore.instance.collection('ProductPosts');
+  final CollectionReference orders         = FirebaseFirestore.instance.collection('Orders');
 
 
 
   Future createNewClient({String name ,phone,accType,cCode,uid}) async {
+    List posts = [] ;
     return await clients.doc(uid).set({
       'Name'    :name,
       'Phone'   : phone ,
       'CCode'   : cCode,
       'AccType' : accType.toString(),
       'UID'     : uid,
+      'posts'   : posts,
     });
   }
 
@@ -54,7 +60,33 @@ class DatabaseService {
       'type'     :type,
       'postUID': postUID,
       'postLocation' : point.data ,
+      'likes'    : [] ,
     });
+  }
+  Future placeAnOrder({String nameAR ,nameEN , url ,vendorUID ,price ,currency,type,postUID , quantity ,Map postLocation}) async {
+
+    final pos = await Location().getLocation();
+    GeoFirePoint point = GeoFirePoint(pos.latitude,pos.longitude);
+
+    await clients.doc(vendorUID).update({
+      'orders' : FieldValue.arrayUnion(['$nameEN'])
+    });
+
+    await orders.doc('$uid$nameEN').set({
+      'nameAR'   :nameAR,
+      'nameEN'   :nameEN,
+      'url'      :url,
+      'VendorUID':vendorUID,
+      'price'    :price,
+      'currency' : currency,
+      'type'     :type,
+      'postUID': postUID,
+      'clientLocation' : point.data,
+      'quantity' : quantity ,
+      'postLocation' : postLocation,
+      'orderState' : OrderState.received.toString(),
+    });
+
   }
 
   Future updateMyLocation() async {
@@ -259,8 +291,30 @@ class DatabaseService {
         vendorUID: snapshot.get('VendorUID'),
         currency: snapshot.get('currency'),
         type: snapshot.get('type'),
-        postUID: snapshot.get('postUID')
+        postUID: snapshot.get('postUID'),
+        likes:  snapshot.get('likes'),
+        postLocation: snapshot.get('postLocation'),
       );
+    });
+  }
+
+  Stream<List<Order>> get getReceivedOrders  {
+    List<Order> receivedOrders = [] ;
+    return orders.where('VendorUID' ,isEqualTo:  uid).snapshots().map((snapshot) {
+      snapshot.docs.forEach((doc) {
+        receivedOrders.add(
+            Order(
+          vendorUID: doc.get('VendorUID'),
+          clientLocation: doc.get('clientLocation'),
+          currency: doc.get('currency'),
+          postLocation: doc.get('postLocation'),
+          quantity: doc.get('quantity'),
+          url: doc.get('url'),
+          nameAR: doc.get('nameAR'),
+          nameEN: doc.get('nameEN'),
+        ));
+      });
+      return receivedOrders ;
     });
   }
 
@@ -271,11 +325,19 @@ class DatabaseService {
     });
   }
 
+  Future loveAProduct(postUID)async{
+    return await productPosts.doc(postUID).update({
+      'likes': FieldValue.arrayUnion([uid]),
+    });
+  }
+
 // getting the account type to display the correct version of The app *************
   Future<Users> getAccType(String uid)async {
     final doc =  await clients.doc(uid).get() ;
     return Users(accType: doc.get('AccType')) ;
   }
+
+
 
 
 

@@ -244,7 +244,7 @@ class _SignUpState extends State<SignUp> {
                         else if (_accountTypeSelected == lang(context,'delivery'))
                           _accType = AccType.delivery;
                         else if (_accountTypeSelected == lang(context, 'farmer' ))
-                          _accType = AccType.farmer;
+                          _accType = AccType.vendor;
                       });
                     },
                     icon: Padding( padding: EdgeInsets.only(right: 8),child: Icon(Icons.arrow_drop_down, color: Colors.greenAccent,),),

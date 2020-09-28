@@ -9,14 +9,22 @@ import 'screens/homeWrapper.dart';
 import 'screens/landing.dart';
 
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+
+  @override
+  _MyAppState createState() => _MyAppState();
+
+}
+
+class _MyAppState extends State<MyApp> {
+
+
   @override
   Widget build(BuildContext context) {
     return StreamProvider<User>.value(
@@ -34,6 +42,7 @@ class MyApp extends StatelessWidget {
           AppLocale.delegate
         ],
         localeResolutionCallback: (currentLocale , supportedLocales){
+
           if(currentLocale != null ){
             for(Locale locale in supportedLocales ){
               if(locale.languageCode == currentLocale.languageCode)

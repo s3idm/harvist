@@ -8,6 +8,8 @@ import 'package:location/location.dart';
 import 'package:rxdart/rxdart.dart';
 import 'dart:async';
 
+LocationData _myLocation;
+
 
 class ResultsInMaps extends StatefulWidget {
 
@@ -25,13 +27,14 @@ class _ResultsInMapsState extends State<ResultsInMaps>  {
   BehaviorSubject<double> radius = BehaviorSubject.seeded(20);
   StreamSubscription _subscription ;
   MapType mapType = MapType.normal ;
-  List<Posts> productsFromDB =[];
-  LocationData _myLocation;
+  List<Posts> productsFromDB = [];
   List<String> postsUID = [] ;
+  ScrollController controller ;
 
 
   @override
   void initState() {
+    controller = ScrollController() ;
     super.initState();
     _myCurrentLocation();
   }
@@ -47,11 +50,12 @@ class _ResultsInMapsState extends State<ResultsInMaps>  {
   }
 
   _myCurrentLocation() async {
-    final myLocation = await Location().getLocation();
-    setState(() {
-      _myLocation = myLocation ;
-    });
-
+    if(_myLocation == null ){
+      final myLocation = await Location().getLocation();
+      setState(() {
+        _myLocation = myLocation ;
+      });
+    }
   }
 
   animateToMyLocation() {
@@ -97,8 +101,25 @@ class _ResultsInMapsState extends State<ResultsInMaps>  {
         markerId: MarkerId(doc.get('postUID')),
         icon: BitmapDescriptor.defaultMarkerWithHue(20.0),
         infoWindow: InfoWindow(title: '${doc.get('price')}  ${doc.get('currency')}' ),
-        onTap: () {},
-        );
+        onTap: () {
+          showBuySheet(
+            context,
+            Posts(
+              nameAR: doc.get('nameAR'),
+              nameEN: doc.get('nameEN'),
+              type: doc.get('type'),
+              postUID: doc.get('postUID'),
+              currency: doc.get('currency'),
+              vendorUID: doc.get('VendorUID'),
+              price: doc.get('price'),
+              url: doc.get('url'),
+              likes: doc.get('likes') ?? [],
+              latLng: LatLng(gPoint.latitude, gPoint.longitude),
+              postLocation: doc.get('postLocation'),
+            ),
+          );
+        },
+      );
       Posts post = Posts(
         nameAR: doc.get('nameAR'),
         nameEN: doc.get('nameEN'),
@@ -108,11 +129,12 @@ class _ResultsInMapsState extends State<ResultsInMaps>  {
         vendorUID: doc.get('VendorUID'),
         price: doc.get('price'),
         url: doc.get('url'),
+        likes: doc.get('likes') ?? [],
+        latLng: LatLng(gPoint.latitude, gPoint.longitude),
+        postLocation: doc.get('postLocation'),
       );
       setState(() {
-        if(!allMarkers.contains(marker.markerId)){
-          allMarkers.add(marker);
-        }
+        allMarkers.add(marker);
         if(!postsUID.contains(post.postUID)){
           postsUID.add(post.postUID);
           productsFromDB.add(post);
@@ -156,7 +178,7 @@ class _ResultsInMapsState extends State<ResultsInMaps>  {
             buildingsEnabled: false,
             indoorViewEnabled: false,
             trafficEnabled: false,
-          ):
+          ) :
           Center(
             child: Padding(
               padding: EdgeInsets.all(15),
@@ -179,7 +201,8 @@ class _ResultsInMapsState extends State<ResultsInMaps>  {
             width: size.width,
             child: PostsView(
               products: productsFromDB,
-              goTOLocation: (){}
+              mapController: _mapController,
+              controller: controller,
             ),
           ),
           Positioned(
@@ -234,3 +257,4 @@ class _ResultsInMapsState extends State<ResultsInMaps>  {
     );
   }
 }
+
